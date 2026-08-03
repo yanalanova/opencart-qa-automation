@@ -1,0 +1,22 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Pytest / Playwright artifacts
+.pytest_cache/
+test-results/
+
+# IDE
+.idea/
+.vscode/
+
+# Secrets / local config
+.env
+
+# OS
+Thumbs.db
+.DS_Store

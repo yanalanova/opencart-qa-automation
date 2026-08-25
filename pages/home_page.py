@@ -8,10 +8,34 @@ class HomePage(BasePage):
 
     def __init__(self, page):
         super().__init__(page)
+
+        # Home page elements
         self.search_input = page.locator("input[name='search']")
         self.featured_cards = page.locator("#content .product-thumb")
         self.success_alert = page.locator(".alert-success")
         self.cart_total = page.locator("#cart-total")
+
+        # Header navigation links
+        self.account_menu = page.locator("#top-links").get_by_role(
+            "link",
+            name="Обліковий запис",
+        )
+
+        self.register_link = page.locator("#top-links").get_by_role(
+            "link",
+            name="Реєстрація",
+        )
+
+        self.login_link = page.locator("#top-links").get_by_role(
+            "link",
+            name="Вхід",
+        )
+
+        self.wishlist_link = page.locator("#wishlist-total")
+
+        self.cart_link = page.locator(
+    "#top-links a[href*='route=checkout/cart']"
+)
 
     def open(self):
         super().open(self.PATH)
@@ -53,3 +77,21 @@ class HomePage(BasePage):
             }""",
             arg=previous_count,
         )
+
+    # Відкриває сторінку "Переглянути всі" для вибраної категорії
+    def open_category(self, name):
+        menu = self.page.locator("#menu")
+
+        category_link = menu.get_by_role(
+            "link",
+            name=name,
+            exact=True,
+        )
+        category_link.hover()
+
+        view_all_link = menu.get_by_role(
+            "link",
+            name=f"Переглянути всі {name}",
+            exact=True,
+        )
+        view_all_link.click()

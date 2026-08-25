@@ -22,11 +22,13 @@ def test_home_featured_cards_are_consistent(page):
         href = home.card_link(i).get_attribute("href")
 
         assert name, f"card {i}: product name is empty"
-        assert PRICE_RE.search(price), f"card {i}: price {price!r} has an invalid format"
+        assert PRICE_RE.search(
+            price
+        ), f"card {i}: price {price!r} has an invalid format"
         assert href, f"card {i}: product link has no href"
-        assert home.card_add_button(i).is_visible(), (
-            f"card {i} ({name}): add-to-cart control is not visible"
-        )
+        assert home.card_add_button(
+            i
+        ).is_visible(), f"card {i} ({name}): add-to-cart control is not visible"
 
 
 def test_card_opens_matching_product(page):
@@ -39,9 +41,9 @@ def test_card_opens_matching_product(page):
     home.open_product(0)
 
     product = ProductPage(page)
-    assert expected_name in product.heading.inner_text(), (
-        f"opened product heading does not match the card name {expected_name!r}"
-    )
+    assert (
+        expected_name in product.heading.inner_text()
+    ), f"opened product heading does not match the card name {expected_name!r}"
     assert page.url.rstrip("/") != BASE_URL.rstrip("/"), "URL stayed on the home page"
 
     page.go_back()
@@ -63,15 +65,15 @@ def test_home_to_cart_journey(page):
     home.wait_for_cart_update(count_before)
 
     assert home.success_alert.is_visible(), "no success message after adding to cart"
-    assert home.cart_count() == count_before + 1, (
-        f"cart badge did not go from {count_before} to {count_before + 1}"
-    )
+    assert (
+        home.cart_count() == count_before + 1
+    ), f"cart badge did not go from {count_before} to {count_before + 1}"
 
     cart = CartPage(page)
     cart.open()
 
     assert "checkout/cart" in page.url, f"unexpected cart URL: {page.url}"
     assert "Кошик" in cart.heading.inner_text(), "cart page title is missing"
-    assert any(expected_name in item for item in cart.item_names()), (
-        f"{expected_name!r} is not listed in the cart"
-    )
+    assert any(
+        expected_name in item for item in cart.item_names()
+    ), f"{expected_name!r} is not listed in the cart"

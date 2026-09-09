@@ -9,16 +9,8 @@ from pages.home_page import HomePage
 @pytest.mark.parametrize(
     "menu_name, expected_route, expected_heading",
     [
-        (
-            "Настільні комп'ютери",
-            "/desktops",
-            "Настільні комп'ютери",
-        ),
-        (
-            "Нетбуки та Ноутбуки",
-            "/laptop-notebook",
-            "Нетбуки та Ноутбуки",
-        ),
+        ("Настільні комп'ютери", "/desktops", "Настільні комп'ютери"),
+        ("Нетбуки та Ноутбуки", "/laptop-notebook", "Нетбуки та Ноутбуки"),
     ],
 )
 def test_main_category_navigation(
@@ -29,148 +21,128 @@ def test_main_category_navigation(
 ):
     """Перевіряє навігацію на сторінки головних категорій."""
 
-    # Відкриваємо головну сторінку
     home = HomePage(page)
     home.open()
-
-    # Відкриваємо сторінку "Переглянути всі" для вибраної категорії
     home.open_category(menu_name)
 
-    # Створюємо об'єкт CategoryPage
     category = CategoryPage(page)
 
-    # Зчитуємо дані зі сторінки категорії
     heading_text = category.heading.inner_text().strip()
     breadcrumb_text = category.breadcrumb.inner_text()
     home_href = category.breadcrumb_home.get_attribute("href")
 
-    # Перевіряємо, що відкрилася правильна сторінка категорії
-    assert heading_text == expected_heading
-    assert expected_route in page.url
+    assert heading_text == expected_heading, (
+        f"Expected heading {expected_heading!r}, got {heading_text!r}"
+    )
+    assert expected_route in page.url, (
+        f"Expected route {expected_route!r} in URL, got {page.url!r}"
+    )
+    assert home_href, "Home breadcrumb has no href"
+    assert "route=common/home" in home_href, f"Unexpected Home href: {home_href!r}"
+    assert expected_heading in breadcrumb_text, (
+        f"{expected_heading!r} is missing in breadcrumb: {breadcrumb_text!r}"
+    )
+    assert category.products.count() > 0, (
+        f"Category {expected_heading!r} has no products"
+    )
 
-    # Перевіряємо breadcrumb
-    assert home_href
-    assert "route=common/home" in home_href
-    assert expected_heading in breadcrumb_text
 
-    # Перевіряємо, що в категорії є товари
-    assert category.products.count() > 0
-
-
-def test_header_navigation(page):
+@pytest.mark.parametrize(
+    "link_name, expected_route, expected_title, open_account_menu",
+    [
+        ("register_link", "account/register", "Зареєструватися", True),
+        ("login_link", "account/login", "Авторизація", True),
+        ("wishlist_link", "account/login", "Авторизація", False),
+        ("cart_link", "checkout/cart", "Кошик", False),
+    ],
+    ids=["register", "login", "wishlist", "cart"],
+)
+def test_header_navigation(
+    page,
+    link_name,
+    expected_route,
+    expected_title,
+    open_account_menu,
+):
     """Перевіряє навігацію через основні посилання в header."""
 
-    # Відкриваємо головну сторінку
     home = HomePage(page)
     home.open()
 
-    # Зберігаємо URL головної сторінки
     home_url = page.url
 
-    # Посилання, очікуваний маршрут і title сторінки
-    header_links = [
-        (
-            home.register_link,
-            "account/register",
-            "Зареєструватися",
-        ),
-        (
-            home.login_link,
-            "account/login",
-            "Авторизація",
-        ),
-        (
-            home.wishlist_link,
-            "account/login",
-            "Авторизація",
-        ),
-        (
-            home.cart_link,
-            "checkout/cart",
-            "Кошик",
-        ),
-    ]
+    if open_account_menu:
+        home.account_menu.click()
 
-    for link, expected_route, expected_title in header_links:
+    link = getattr(home, link_name)
+    href = link.get_attribute("href")
 
-        # Для Реєстрації та Входу відкриваємо dropdown "Обліковий запис"
-        if link == home.register_link or link == home.login_link:
-            home.account_menu.click()
+    assert href, f"{link_name} has no href"
+    assert href != "#", f"{link_name} has placeholder href '#'"
+    assert not href.startswith("javascript:"), (
+        f"{link_name} uses JavaScript href: {href!r}"
+    )
 
-        # Зчитуємо href перед переходом
-        href = link.get_attribute("href")
+    link.click()
 
-        # Перевіряємо, що посилання існує і не є placeholder
-        assert href
-        assert href != "#"
-        assert not href.startswith("javascript:")
+    assert expected_route in page.url, (
+        f"Expected route {expected_route!r} in URL, got {page.url!r}"
+    )
+    assert page.title() == expected_title, (
+        f"Expected title {expected_title!r}, got {page.title()!r}"
+    )
 
-        # Переходимо за посиланням
-        link.click()
+    page.go_back()
 
-        # Перевіряємо маршрут і title сторінки
-        assert expected_route in page.url
-        assert page.title() == expected_title
-
-        # Повертаємося на головну сторінку
-        page.go_back()
-
-        # Перевіряємо, що повернулися назад
-        assert page.url == home_url
+    assert page.url == home_url, (
+        f"Expected to return to {home_url!r}, got {page.url!r}"
+    )
 
 
 def test_multilevel_category_navigation(page):
-    """Перевіряє перехід у підкатегорію та повернення до батьківської категорії через breadcrumb."""
+    """Перевіряє навігацію в підкатегорію та повернення через breadcrumb."""
 
-    # Відкриваємо головну сторінку
     home = HomePage(page)
     home.open()
-
-    # Відкриваємо головну категорію
     home.open_category("Настільні комп'ютери")
 
     category = CategoryPage(page)
 
-    # Знаходимо підкатегорію Mac та зчитуємо її href
     mac_link = category.subcategory_link("Mac")
     mac_href = mac_link.get_attribute("href")
 
-    assert mac_href
+    assert mac_href, "Mac subcategory has no href"
 
-    # Отримуємо очікуваний route з реального href
     expected_subcategory_route = urlparse(mac_href).path
 
-    # Відкриваємо підкатегорію Mac
     category.open_subcategory("Mac")
 
-    # Зчитуємо дані сторінки підкатегорії
     heading_text = category.heading.inner_text().strip()
     breadcrumb_text = category.breadcrumb.inner_text()
 
-    # Перевіряємо, що відкрилася правильна підкатегорія
-    assert heading_text == "Mac"
-    assert expected_subcategory_route in page.url
+    assert heading_text == "Mac", f"Expected heading 'Mac', got {heading_text!r}"
+    assert expected_subcategory_route in page.url, (
+        f"Expected route {expected_subcategory_route!r} in URL, got {page.url!r}"
+    )
+    assert "Настільні комп'ютери" in breadcrumb_text, (
+        f"Parent category is missing in breadcrumb: {breadcrumb_text!r}"
+    )
+    assert "Mac" in breadcrumb_text, (
+        f"'Mac' is missing in breadcrumb: {breadcrumb_text!r}"
+    )
+    assert breadcrumb_text.index("Настільні комп'ютери") < breadcrumb_text.index("Mac"), (
+        f"Wrong breadcrumb order: {breadcrumb_text!r}"
+    )
 
-    # Перевіряємо ієрархію breadcrumb
-    assert "Настільні комп'ютери" in breadcrumb_text
-    assert "Mac" in breadcrumb_text
-
-    # Перевіряємо правильний порядок:
-    # Настільні комп'ютери -> Mac
-    assert breadcrumb_text.index(
-        "Настільні комп'ютери"
-    ) < breadcrumb_text.index("Mac")
-
-    # Повертаємося до батьківської категорії через breadcrumb
     category.click_breadcrumb("Настільні комп'ютери")
 
-    # Зчитуємо дані батьківської сторінки
     parent_heading = category.heading.inner_text().strip()
     parent_breadcrumb = category.breadcrumb.inner_text()
 
-    # Перевіряємо, що повернулися до батьківської категорії
-    assert parent_heading == "Настільні комп'ютери"
-    assert "/desktops" in page.url
-
-    # Перевіряємо, що підкатегорії Mac більше немає в breadcrumb
-    assert "Mac" not in parent_breadcrumb
+    assert parent_heading == "Настільні комп'ютери", (
+        f"Expected parent heading 'Настільні комп'ютери', got {parent_heading!r}"
+    )
+    assert "/desktops" in page.url, f"Expected '/desktops' in URL, got {page.url!r}"
+    assert "Mac" not in parent_breadcrumb, (
+        f"'Mac' should not be in parent breadcrumb: {parent_breadcrumb!r}"
+    )

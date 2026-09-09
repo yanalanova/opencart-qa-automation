@@ -3,7 +3,6 @@ from pages.base_page import BasePage
 import re
 
 
-
 class CategoryPage(BasePage):
     def __init__(self, page):
         super().__init__(page)
@@ -13,6 +12,7 @@ class CategoryPage(BasePage):
         self.breadcrumb = page.locator("ul.breadcrumb")
         self.breadcrumb_home = self.breadcrumb.locator("li").first.locator("a")
     def subcategory_link(self, name):
+        
         # Знаходить посилання підкатегорії, наприклад "Mac (1)"
         return self.page.locator("#content").get_by_role(
             "link",
@@ -25,8 +25,5 @@ class CategoryPage(BasePage):
 
     def click_breadcrumb(self, name):
         # Переходить на вибраний рівень через breadcrumb
-        self.breadcrumb.get_by_role(
-            "link",
-            name=name,
-            exact=True,
-        ).click()
+        self.breadcrumb.get_by_role("link",name=name,exact=True,).click()
+        

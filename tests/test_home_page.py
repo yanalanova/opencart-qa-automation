@@ -1,4 +1,3 @@
-```python
 import re
 
 from config import BASE_URL

@@ -30,68 +30,36 @@ class CategoryPage(BasePage):
         """Return a product card by index."""
         return self.products.nth(index)
 
-    def card_link(self, index):
+    def card_link(self, card):
         """Return the product link from a card."""
-        return self.card(index).locator("h4 a")
-
-    def card_price(self, index):
-        """Return the product price from a card."""
-        return self.card(index).locator(".price")
-
-    def card_add_button(self, index):
-        """Return the Add to Cart button from a card."""
-        return self.card(index).locator("button[onclick^='cart.add']")
-
-    def card_name_link(self, card):
-        """Return the product link from a specific card locator."""
         return card.locator("h4 a")
 
-    def card_add_button_by_card(self, card):
-        """Return the Add to Cart button from a specific card locator."""
+    def card_price(self, card):
+        """Return the product price from a card."""
+        return card.locator(".price")
+
+    def card_add_button(self, card):
+        """Return the Add to Cart button from a card."""
         return card.locator("button[onclick^='cart.add']")
 
-    def card_wishlist_button(self, index):
+    def card_wishlist_button(self, card):
         """Return the Add to Wishlist button from a card."""
-        return self.card(index).locator("button[onclick*='wishlist.add']")
-
-    def card_wishlist_button_by_card(self, card):
-        """Return the Add to Wishlist button from a specific card locator."""
         return card.locator("button[onclick*='wishlist.add']")
 
-    def get_product_info(self, index):
-        """Get product information from a card by index.
+    def get_product_info(self, card):
+        """Get product data from a card locator.
 
         Returns a dictionary with:
             - name: Product name text
             - href: Product URL link
             - price: Product price text
-            - add_button: Add to Cart button locator
-            - wishlist_button: Add to Wishlist button locator
         """
-        return {
-            "name": self.card_link(index).inner_text().strip(),
-            "href": self.card_link(index).get_attribute("href"),
-            "price": self.card_price(index).inner_text().strip(),
-            "add_button": self.card_add_button(index),
-            "wishlist_button": self.card_wishlist_button(index),
-        }
+        link = self.card_link(card)
 
-    def get_product_info_by_card(self, card):
-        """Get product information from a specific card locator.
-
-        Returns a dictionary with:
-            - name: Product name text
-            - href: Product URL link
-            - price: Product price text
-            - add_button: Add to Cart button locator
-            - wishlist_button: Add to Wishlist button locator
-        """
         return {
-            "name": self.card_name_link(card).inner_text().strip(),
-            "href": self.card_name_link(card).get_attribute("href"),
-            "price": card.locator(".price").inner_text().strip(),
-            "add_button": self.card_add_button_by_card(card),
-            "wishlist_button": self.card_wishlist_button_by_card(card),
+            "name": link.inner_text().strip(),
+            "href": link.get_attribute("href"),
+            "price": self.card_price(card).inner_text().strip(),
         }
 
     def subcategory_link(self, name):

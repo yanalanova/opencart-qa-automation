@@ -46,7 +46,6 @@ def test_two_cards_are_independent(page):
 
     products_count = category_page.products.count()
 
-    # Перевіряємо, що в категорії є щонайменше дві картки
     assert products_count >= 2, (
         "Для порівняння потрібно щонайменше 2 картки товарів, "
         f"але знайдено: {products_count}"

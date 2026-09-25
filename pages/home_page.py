@@ -1,5 +1,3 @@
-import re
-
 from pages.base_page import BasePage
 
 
@@ -57,13 +55,6 @@ class HomePage(BasePage):
     def add_card_to_cart(self, index):
         """Add a featured product to the cart."""
         self.card_add_button(index).click()
-
-    def cart_count(self):
-        """Return the current number of products in the cart."""
-        cart_text = self.cart_total.inner_text()
-        match = re.search(r"\d+", cart_text)
-
-        return int(match.group()) if match else 0
 
     def wait_for_cart_update(self, previous_count):
         """Wait until the cart product count changes."""

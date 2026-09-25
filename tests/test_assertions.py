@@ -142,3 +142,47 @@ def test_product_data_consistency_between_pages(page):
         f"{expected_path!r}, отримали {actual_path!r}. "
         f"Повний URL сторінки: {page.url!r}"
     )
+
+
+def test_cart_count_matches_added_quantity(page):
+    """Кошик збільшується саме на кількість доданого товару."""
+
+    category_page = CategoryPage(page)
+    category_page.open()
+
+    # Скільки товарів було в кошику спочатку
+    initial_count = category_page.cart_count()
+
+    # card(0) на цій сторінці має обов'язкові опції (розмір/колір) і не додається
+    # в кошик без їх вибору, тому беремо товар без обов'язкових опцій
+    product_card = category_page.card(2)
+    category_page.card_link(product_card).click()
+    page.wait_for_load_state()
+
+    product_page = ProductPage(page)
+
+    # Скільки одиниць товару буде додано
+    quantity_added = int(product_page.quantity_input.input_value())
+    expected_count = initial_count + quantity_added
+
+    product_page.add_to_cart_button.click()
+    category_page.success_alert.wait_for(state="visible")
+
+    # Оновлення кошика відбувається після запиту, тому чекаємо на нове число
+    page.wait_for_function(
+        """
+        expectedCount => {
+            const text = document.querySelector("#cart-total")?.textContent;
+            const match = text?.match(/\\d+/);
+            return match && Number(match[0]) === expectedCount;
+        }
+        """,
+        arg=expected_count,
+    )
+
+    actual_count = category_page.cart_count()
+
+    assert actual_count == expected_count, (
+        f"У кошику було {initial_count}, додали {quantity_added}. "
+        f"Очікували {expected_count}, отримали {actual_count}."
+    )

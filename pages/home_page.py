@@ -7,8 +7,9 @@ class HomePage(BasePage):
     def __init__(self, page):
         super().__init__(page)
 
-        # Search
-        self.search_input = page.locator("input[name='search']")
+        # Search поле та кнопка
+        self.search_input = page.locator("div#search input[name='search']")
+        self.search_button = page.locator("div#search button")
 
         # Featured products
         self.featured_cards = page.locator("#content .product-thumb")
@@ -31,6 +32,11 @@ class HomePage(BasePage):
     def open(self):
         """Open the home page."""
         super().open(self.PATH)
+
+    def search(self, term):
+        """Ввести пошуковий запит і натиснути кнопку пошуку."""
+        self.search_input.fill(term)
+        self.search_button.click()
 
     def card(self, index):
         """Return a featured product card by index."""

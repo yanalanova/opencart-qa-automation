@@ -4,10 +4,7 @@ import pytest
 
 from pages.home_page import HomePage
 from pages.product_page import ProductPage
-from pages.search_results_page import SearchResultsPage
-
-
-NO_RESULTS = "Немає продуктів які б відповідали критеріям пошуку."
+from pages.search_results_page import NO_RESULTS_TEXT, SearchResultsPage
 
 
 def test_search_results_are_relevant(page):
@@ -97,46 +94,33 @@ def test_search_no_results(page, initial_term, term):
     # Перевіряємо відсутність усіх карток, включно з попередніми
     assert results.product_cards.count() == 0
 
-    # Перевіряємо видимість і точний текст повідомлення
-    assert message.is_visible()
-    assert message.inner_text().strip() == NO_RESULTS
+    # Перевіряємо точний текст повідомлення
+    assert message.inner_text().strip() == NO_RESULTS_TEXT
 
 
 @pytest.mark.parametrize(
-    "term, has_results, expected_text",
+    "term, expected_text",
     [
-        pytest.param("iPhone", True, "iphone", id="exact_name"),
-        pytest.param("phone", True, "phone", id="partial_name"),
-        pytest.param("IPHONE", True, "iphone", id="uppercase"),
-        pytest.param("qwertyzzz", False, NO_RESULTS, id="no_results"),
+        pytest.param("iPhone", "iphone", id="exact_name"),
+        pytest.param("phone", "phone", id="partial_name"),
+        pytest.param("IPHONE", "iphone", id="uppercase"),
     ],
 )
-def test_search_matrix(page, term, has_results, expected_text):
-    """Перевіряє пошук із різними запитами та очікуваннями."""
+def test_search_matrix(page, term, expected_text):
+    """Перевіряє релевантність результатів для різних варіантів запиту."""
     home = HomePage(page)
     home.open()
     home.search(term)
 
     results = SearchResultsPage(page)
+    results.product_cards.first.wait_for(state="visible")
+    names = results.card_names()
 
-    if has_results:
-        results.product_cards.first.wait_for(state="visible")
-        names = results.card_names()
+    # Перевіряємо наявність результатів
+    assert len(names) > 0, f"За запитом '{term}' не знайдено товарів"
 
-        # Перевіряємо наявність результатів
-        assert len(names) > 0, f"За запитом '{term}' не знайдено товарів"
-
-        # Перевіряємо відповідність хоча б однієї назви очікуванню
-        assert any(
-            expected_text.lower() in name.lower()
-            for name in names
-        ), f"Серед товарів немає назви з текстом '{expected_text}'"
-
-    else:
-        message = results.no_results_message
-        message.wait_for(state="visible")
-
-        # Перевіряємо відсутність карток і точне повідомлення
-        assert results.product_cards.count() == 0
-        assert message.is_visible()
-        assert message.inner_text().strip() == expected_text
+    # Перевіряємо відповідність хоча б однієї назви очікуванню
+    assert any(
+        expected_text.lower() in name.lower()
+        for name in names
+    ), f"Серед товарів немає назви з текстом '{expected_text}'"

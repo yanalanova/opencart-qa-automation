@@ -34,7 +34,6 @@ def test_registration_creates_account(page):
     register_page.open()
     register_page.fill(user)
 
-    # Обидва select дійсно обрали значення, а не лишились порожніми
     assert register_page.country_select.input_value() != ""
     assert register_page.zone_select.input_value() != ""
 
@@ -60,20 +59,15 @@ def test_registration_required_field_validation(page, field):
     register_page.open()
     register_page.register(user)
 
-    # Реєстрація не повинна пройти
     assert "account/register" in page.url
-
-    # Хоча б одна помилка валідації видима
     assert register_page.errors.count() > 0
 
-    # Саме це поле показує своє повідомлення
     target_input = getattr(register_page, FIELD_LOCATORS[field])
     target_error = register_page.error_for(target_input)
     assert FIELD_ERRORS[field] in target_error.inner_text(), (
         f"Очікували повідомлення про поле '{field}'"
     )
 
-    # Інше, коректно заповнене поле не показує хибної помилки
     other_field = "last_name" if field != "last_name" else "first_name"
     other_input = getattr(register_page, FIELD_LOCATORS[other_field])
     other_error = register_page.error_for(other_input)
@@ -94,7 +88,6 @@ def test_duplicate_email_keeps_original_account_intact(page):
     login_page = LoginPage(page)
     login_page.logout()
 
-    # Повторна реєстрація з тим самим email
     register_page.open()
     register_page.register(user)
 
@@ -102,7 +95,6 @@ def test_duplicate_email_keeps_original_account_intact(page):
     assert register_page.duplicate_email_alert.is_visible()
     assert "вже зареєстровано" in register_page.duplicate_email_alert.inner_text()
 
-    # Оригінальний акаунт далі логіниться без проблем
     login_page.open()
     login_page.login(user["email"], user["password"])
 

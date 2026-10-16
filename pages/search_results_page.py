@@ -1,13 +1,16 @@
 from pages.base_page import BasePage
 
 
+NO_RESULTS_TEXT = "Немає продуктів які б відповідали критеріям пошуку."
+
+
 class SearchResultsPage(BasePage):
     def __init__(self, page):
         super().__init__(page)
 
         self.product_cards = page.locator(".product-thumb")
         self.no_results_message = page.get_by_text(
-            "Немає продуктів які б відповідали критеріям пошуку.",
+            NO_RESULTS_TEXT,
             exact=True,
         )
 

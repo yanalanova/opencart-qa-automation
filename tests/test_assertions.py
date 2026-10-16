@@ -142,6 +142,16 @@ def test_product_data_consistency_between_pages(page):
         f"{expected_path!r}, отримали {actual_path!r}. "
         f"Повний URL сторінки: {page.url!r}"
     )
+    # Картка показує ціну одним блоком разом зі старою ціною та податком при
+    # знижці, тому звіряємо саму ціну, а не весь текст
+    card_price_value = PRICE_RE.search(card_price).group()
+    product_page_price_value = PRICE_RE.search(product_page_price).group()
+
+    assert product_page_price_value == card_price_value, (
+        f"Ціна не збігається: у картці {card_price_value!r}, "
+        f"на сторінці товару {product_page_price_value!r}"
+    )
+
 
 
 def test_cart_count_matches_added_quantity(page):
@@ -166,7 +176,7 @@ def test_cart_count_matches_added_quantity(page):
     expected_count = initial_count + quantity_added
 
     product_page.add_to_cart_button.click()
-    category_page.success_alert.wait_for(state="visible")
+    product_page.success_alert.wait_for(state="visible")
 
     # Оновлення кошика відбувається після запиту, тому чекаємо на нове число
     page.wait_for_function(
